@@ -99,7 +99,7 @@ func setupTestState(t *testing.T) *testState {
 	userHandler := &handlers.UserHandler{}
 
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"service": "MaaS API", "version": "1.0.0", "status": "operational"})
+		c.JSON(http.StatusOK, gin.H{"service": "smail API", "version": "1.0.0", "status": "operational"})
 	})
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})

@@ -96,7 +96,7 @@ func SendEmail(cfg *config.Settings, sender, recipient, subject, body string, ht
 }
 
 func WorkerLoop(cfg *config.Settings) {
-	log.Println("MaaS Mail Worker started. Waiting for jobs...")
+	log.Println("smail Mail Worker started. Waiting for jobs...")
 
 	for {
 		job, err := services.DequeueMailJob()

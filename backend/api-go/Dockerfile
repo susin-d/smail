@@ -10,17 +10,17 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o maas-api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -o smail-api ./cmd/api
 
 FROM alpine:3.19
 
 WORKDIR /root/
 
 # Copy binary from builder
-COPY --from=builder /app/maas-api .
+COPY --from=builder /app/smail-api .
 
 # Expose port
 EXPOSE 8000
 
 # Run the API
-CMD ["./maas-api"]
+CMD ["./smail-api"]

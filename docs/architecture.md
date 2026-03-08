@@ -1,8 +1,8 @@
-# MaaS Architecture
+# smail architecture
 
 ## System Overview
 
-MaaS (Mail as a Service) is a lightweight, multi-user, multi-domain email platform designed to run within a 1 GB RAM budget on a single VPS.
+smail (Mail as a Service) is a lightweight, multi-user, multi-domain email platform designed to run within a 1 GB RAM budget on a single VPS.
 
 ## Architecture Diagram
 

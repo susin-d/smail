@@ -50,7 +50,7 @@ func EnqueueMailJob(sender, recipient, subject, body string, htmlBody *string, a
 	}
 
 	ctx := context.Background()
-	if err := database.RedisClient.LPush(ctx, "maas:mail_queue", data).Err(); err != nil {
+	if err := database.RedisClient.LPush(ctx, "smail:mail_queue", data).Err(); err != nil {
 		log.Printf("Failed to enqueue mail job to redis: %v", err)
 	} else {
 		log.Printf("Enqueued mail job: %s (%s -> %s)", jobID, sender, recipient)
@@ -63,7 +63,7 @@ func DequeueMailJob() (*MailJob, error) {
 	ctx := context.Background()
 	
 	// rpop is non-blocking. return nil if empty.
-	result, err := database.RedisClient.RPop(ctx, "maas:mail_queue").Result()
+	result, err := database.RedisClient.RPop(ctx, "smail:mail_queue").Result()
 	if err != nil {
 		return nil, err // Returns redis.Nil if empty
 	}
@@ -82,10 +82,10 @@ func EnqueueRetry(job *MailJob) {
 	ctx := context.Background()
 
 	if job.Retries <= job.MaxRetries {
-		database.RedisClient.LPush(ctx, "maas:mail_queue", data)
+		database.RedisClient.LPush(ctx, "smail:mail_queue", data)
 		log.Printf("Re-enqueued job %s (retry %d)", job.ID, job.Retries)
 	} else {
-		database.RedisClient.LPush(ctx, "maas:dead_letter", data)
+		database.RedisClient.LPush(ctx, "smail:dead_letter", data)
 		log.Printf("Job %s exceeded max retries, moved to dead letter queue", job.ID)
 	}
 }

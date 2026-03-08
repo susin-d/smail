@@ -50,7 +50,7 @@ export default function Sidebar() {
             {/* Logo */}
             <div className="sidebar-logo">
                 <div className="logo-icon">✉</div>
-                <h1>MaaS</h1>
+                <h1>smail</h1>
             </div>
 
             {/* Compose Button */}

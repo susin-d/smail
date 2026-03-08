@@ -14,7 +14,7 @@ FPDF = install_and_import()
 class PDF(FPDF):
     def header(self):
         self.set_font('helvetica', 'B', 15)
-        self.cell(0, 10, 'MaaS Backend Resource Usage & Scalability Report', 0, 1, 'C')
+        self.cell(0, 10, 'smail Backend Resource Usage & Scalability Report', 0, 1, 'C')
         self.ln(5)
 
     def footer(self):
@@ -37,7 +37,7 @@ pdf = PDF()
 pdf.add_page()
 pdf.set_auto_page_break(auto=True, margin=15)
 
-body_1 = """The Mail-as-a-Service (MaaS) backend has been highly optimized to run within a strict 1GB RAM constraint. The architecture utilizes Go for the API layer due to its minimal footprint and high concurrency capabilities, alongside finely tuned Docker containers for Postfix, Dovecot, Rspamd, MariaDB, and Redis.
+body_1 = """The Mail-as-a-Service (smail) backend has been highly optimized to run within a strict 1GB RAM constraint. The architecture utilizes Go for the API layer due to its minimal footprint and high concurrency capabilities, alongside finely tuned Docker containers for Postfix, Dovecot, Rspamd, MariaDB, and Redis.
 
 Below is the theoretical resource breakdown based on our configured Docker Compose limits and expected application behavior."""
 pdf.chapter_title('1. Architecture & Baseline Overheads')
@@ -92,5 +92,5 @@ Sending a 10MB attachment requires the Go API to load the base64 payload into me
 pdf.chapter_title('5. Edge Cases & Constraints')
 pdf.chapter_body(body_5)
 
-pdf.output('c:/project/Mail as a service/backend/MaaS_Resource_Report.pdf')
+pdf.output('c:/project/Mail as a service/backend/smail_Resource_Report.pdf')
 print("PDF generated successfully.")

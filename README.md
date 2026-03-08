@@ -1,6 +1,6 @@
 # Smail (A small mail server)
 
-MaaS is a lightweight, self-hosted multi-domain mail platform designed to run on a single VPS. It includes SMTP/IMAP infrastructure, anti-spam and DKIM services, a Go API, and a Next.js frontend.
+smail is a lightweight, self-hosted multi-domain mail platform designed to run on a single VPS. It includes SMTP/IMAP infrastructure, anti-spam and DKIM services, a Go API, and a Next.js frontend.
 
 ## Repository Structure
 
@@ -30,26 +30,37 @@ cp .env.example .env
 2. Edit `backend/.env` and set at minimum:
 
 - `MYSQL_ROOT_PASSWORD`
+- `MYSQL_DATABASE` (default: `smail`)
+- `MYSQL_USER` (default: `smail_user`)
 - `MYSQL_PASSWORD`
 - `JWT_SECRET`
+- `SMAIL_DEV=0` (for production)
 - `PRIMARY_DOMAIN`
 - `HOSTNAME`
 - `CORS_ORIGINS`
 
-3. Build and run:
+3. Keep service hostnames/cert paths aligned with your domain in:
+
+- `backend/nginx/nginx.conf`
+- `backend/postfix/main.cf`
+- `backend/dovecot/dovecot.conf`
+
+4. Build and run:
 
 ```bash
 docker compose build
 docker compose up -d
 ```
 
-4. Verify services:
+5. Verify services:
 
 ```bash
 docker compose ps
 curl http://localhost:8000/
 curl http://localhost:8000/health
 ```
+
+If `/auth/register` returns `Domain '...' is not registered`, first add the domain row in MariaDB, then register users.
 
 ## Local Frontend Development
 

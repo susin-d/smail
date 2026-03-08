@@ -1,1 +1,20 @@
 .env
+
+# Generated binaries
+api-go/maas-api
+api-go/smail-api
+
+# Local databases
+*.db
+
+# Build and runtime logs
+*.log
+api_go_build*.log
+build_output.log
+
+# Generated reports / temporary outputs
+*.pdf
+
+# Python cache
+__pycache__/
+*.pyc

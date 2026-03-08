@@ -1,8 +1,8 @@
--- MaaS Database Schema
+-- smail Database Schema
 -- Optimized for MariaDB with minimal memory footprint
 
-CREATE DATABASE IF NOT EXISTS maas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE maas;
+CREATE DATABASE IF NOT EXISTS smail CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE smail;
 
 -- ─── Domains ───
 CREATE TABLE domains (

@@ -1,18 +1,30 @@
-# MaaS API — Complete Testing Guide
+# smail API — Complete Testing Guide
 
 > **Base URL:** `http://localhost:8000` (direct) or `https://mail.yourdomain.com/api` (via Nginx)
 >
-> **Swagger UI:** `http://localhost:8000/docs`
+> **Note:** This Go API currently does not expose Swagger/OpenAPI endpoints.
 
 ---
 
 ## 0. Health Check
 
+Before running auth tests, ensure:
+
+- The stack is running: `docker compose up -d --build` (from `backend/`)
+- The domain for your test email exists in `domains` table
+
+Example (bootstrap domain once):
+
+```bash
+docker compose exec mariadb mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" \
+  -e "INSERT IGNORE INTO domains (domain, is_verified) VALUES ('example.com', 1);"
+```
+
 ```bash
 # Health check
 curl http://localhost:8000/
 
-# Expected: {"service":"MaaS API","version":"1.0.0","status":"operational"}
+# Expected: {"service":"smail API","version":"1.0.0","status":"operational"}
 ```
 
 ```bash
@@ -42,8 +54,7 @@ curl -X POST http://localhost:8000/auth/register \
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIs...",
-  "token_type": "bearer",
-  "expires_in": 86400,
+  "expires_in": 1709900000,
   "user": {
     "id": 1,
     "email": "admin@example.com",
@@ -80,6 +91,8 @@ curl -X POST http://localhost:8000/auth/login \
 ```
 
 **Expected 200:** Same structure as register response.
+
+`expires_in` is a Unix timestamp indicating token expiration time.
 
 **Error cases:**
 ```bash
@@ -382,8 +395,8 @@ curl -X POST http://localhost:8000/mail/send \
   -H "Content-Type: application/json" \
   -d '{
     "to": "recipient@gmail.com",
-    "subject": "Hello from MaaS",
-    "body": "This is a test email sent from MaaS.",
+    "subject": "Hello from smail",
+    "body": "This is a test email sent from smail.",
     "html_body": "<h1>Hello!</h1><p>This is a test.</p>"
   }'
 ```
@@ -482,7 +495,7 @@ All errors follow this structure:
 
 ```bash
 #!/bin/bash
-# MaaS API Test Script
+# smail API Test Script
 # Usage: bash test_api.sh
 
 BASE="http://localhost:8000"
@@ -495,7 +508,11 @@ REG=$(curl -s -X POST $BASE/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"testpass123","display_name":"Test User"}')
 echo $REG | python3 -m json.tool
-TOKEN=$(echo $REG | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+TOKEN=$(echo "$REG" | jq -r '.access_token')
+if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+  echo "Failed to parse access token. Install jq or inspect REG output."
+  exit 1
+fi
 echo "Token: ${TOKEN:0:20}..."
 
 echo -e "\n=== 3. Login ==="
@@ -529,7 +546,7 @@ echo -e "\n=== 9. Send Email ==="
 curl -s -X POST $BASE/mail/send \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"to":"recipient@gmail.com","subject":"Test from MaaS","body":"Hello World!"}' | python3 -m json.tool
+  -d '{"to":"recipient@gmail.com","subject":"Test from smail","body":"Hello World!"}' | python3 -m json.tool
 
 echo -e "\n=== All tests complete! ==="
 ```

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# MaaS Production Deployment Script
+# smail Production Deployment Script
 # Optimized for a 1GB RAM Debian/Ubuntu VPS
 
 set -e
 
 echo "======================================================"
-echo " Starting MaaS Production Deployment"
+echo " Starting smail Production Deployment"
 echo "======================================================"
 
 # 1. System Requirements & Docker
@@ -59,11 +59,11 @@ echo "[*] Building multi-stage Docker images (This will compile the Next.js fron
 echo "    This step may take a few minutes on a 1GB VPS."
 docker compose build --parallel
 
-echo "[*] Starting MaaS Platform..."
+echo "[*] Starting smail Platform..."
 docker compose up -d
 
 echo "======================================================"
-echo " MaaS Deployment Complete! 🚀"
+echo " smail Deployment Complete! 🚀"
 echo "======================================================"
 echo ""
 echo "System Status:"

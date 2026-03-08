@@ -91,7 +91,7 @@ docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}"
 free -h
 
 # Per-process inside a container
-docker exec maas-mariadb cat /proc/meminfo | head -5
+docker exec smail-mariadb cat /proc/meminfo | head -5
 ```
 
 ## Emergency Memory Reduction
@@ -138,10 +138,10 @@ Avoid Prometheus/Grafana (too heavy). Instead use:
    #!/bin/bash
    USED=$(free -m | awk 'NR==2{print $3}')
    if [ "$USED" -gt 900 ]; then
-     echo "HIGH MEMORY: ${USED}MB" | mail -s "MaaS Alert" admin@yourdomain.com
+    echo "HIGH MEMORY: ${USED}MB" | mail -s "smail memory alert" admin@yourdomain.com
    fi
    ```
-   Add to crontab: `*/5 * * * * /opt/maas/check_memory.sh`
+  Add to crontab: `*/5 * * * * /opt/smail/check_memory.sh`
 
 4. **Log rotation** — Prevent log files from consuming disk:
    ```bash

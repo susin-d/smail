@@ -11,8 +11,8 @@ smtp_tls_loglevel = 1
 
 # ─── TLS (Incoming) ───
 smtpd_tls_security_level = may
-smtpd_tls_cert_file = /etc/letsencrypt/live/mail.example.com/fullchain.pem
-smtpd_tls_key_file = /etc/letsencrypt/live/mail.example.com/privkey.pem
+smtpd_tls_cert_file = /etc/letsencrypt/live/mail.susindran.in/fullchain.pem
+smtpd_tls_key_file = /etc/letsencrypt/live/mail.susindran.in/privkey.pem
 smtpd_tls_loglevel = 1
 smtpd_tls_received_header = yes
 
@@ -45,8 +45,8 @@ smtpd_recipient_restrictions =
     reject_unauth_destination
 
 # ─── Network ───
-myhostname = mail.example.com
-mydomain = example.com
+myhostname = mail.susindran.in
+mydomain = susindran.in
 myorigin = $mydomain
 mydestination = localhost
 mynetworks = 127.0.0.0/8 172.16.0.0/12 [::1]/128

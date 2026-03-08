@@ -31,9 +31,9 @@ func GetSettings() *Settings {
 	// Attempt to load .env, ignore if not found (for Docker)
 	_ = godotenv.Load("../../.env")
 
-	isDev := strings.ToLower(os.Getenv("MAAS_DEV")) == "1" ||
-		strings.ToLower(os.Getenv("MAAS_DEV")) == "true" ||
-		strings.ToLower(os.Getenv("MAAS_DEV")) == "yes"
+	isDev := strings.ToLower(os.Getenv("SMAIL_DEV")) == "1" ||
+		strings.ToLower(os.Getenv("SMAIL_DEV")) == "true" ||
+		strings.ToLower(os.Getenv("SMAIL_DEV")) == "yes"
 
 	jwtExpire, err := strconv.Atoi(os.Getenv("JWT_EXPIRE_MINUTES"))
 	if err != nil {

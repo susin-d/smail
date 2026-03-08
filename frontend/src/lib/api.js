@@ -1,5 +1,5 @@
 /**
- * MaaS API Client
+ * smail API Client
  * Centralized fetch wrapper with JWT auth.
  */
 
@@ -8,30 +8,30 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 class ApiClient {
     getToken() {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('maas_token');
+            return localStorage.getItem('smail_token');
         }
         return null;
     }
 
     setToken(token) {
-        localStorage.setItem('maas_token', token);
+        localStorage.setItem('smail_token', token);
     }
 
     clearToken() {
-        localStorage.removeItem('maas_token');
-        localStorage.removeItem('maas_user');
+        localStorage.removeItem('smail_token');
+        localStorage.removeItem('smail_user');
     }
 
     getUser() {
         if (typeof window !== 'undefined') {
-            const user = localStorage.getItem('maas_user');
+            const user = localStorage.getItem('smail_user');
             return user ? JSON.parse(user) : null;
         }
         return null;
     }
 
     setUser(user) {
-        localStorage.setItem('maas_user', JSON.stringify(user));
+        localStorage.setItem('smail_user', JSON.stringify(user));
     }
 
     async request(endpoint, options = {}) {

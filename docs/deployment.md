@@ -41,8 +41,8 @@ ufw enable
 ```bash
 # Clone the project
 cd /opt
-git clone YOUR_REPO_URL maas
-cd maas/backend
+git clone YOUR_REPO_URL smail
+cd smail/backend
 
 # Create environment file
 cp .env.example .env
@@ -55,12 +55,21 @@ nano .env
 
 ```env
 MYSQL_ROOT_PASSWORD=your_secure_root_password
+MYSQL_DATABASE=smail
+MYSQL_USER=smail_user
 MYSQL_PASSWORD=your_secure_db_password
 JWT_SECRET=your_32_char_jwt_secret
+SMAIL_DEV=0
 PRIMARY_DOMAIN=yourdomain.com
 HOSTNAME=mail.yourdomain.com
 CORS_ORIGINS=https://your-app.vercel.app
 ```
+
+Also ensure domain and cert paths are consistent in these files:
+
+- `backend/nginx/nginx.conf`
+- `backend/postfix/main.cf`
+- `backend/dovecot/dovecot.conf`
 
 ## Step 4: TLS Certificates
 
@@ -91,7 +100,7 @@ volumes:
 ## Step 5: Build and Start
 
 ```bash
-cd /opt/maas/backend
+cd /opt/smail/backend
 
 # Build all containers
 docker compose build
@@ -102,8 +111,14 @@ docker compose up -d
 # Check all containers are running
 docker compose ps
 
+# Show unhealthy/exited containers too
+docker compose ps -a
+
 # View logs
 docker compose logs -f
+
+# API logs
+docker compose logs -f api-go
 ```
 
 ## Step 6: Verify Services
@@ -114,39 +129,33 @@ docker stats --no-stream
 
 # Test API
 curl http://localhost:8000/health
+curl http://localhost:8000/
 
 # Check Postfix
-docker exec maas-postfix postconf myhostname
+docker exec smail-postfix postconf myhostname
 
 # Check Dovecot
-docker exec maas-dovecot dovecot --version
+docker exec smail-dovecot dovecot --version
 
 # Get DKIM key
-docker exec maas-opendkim cat /etc/opendkim/keys/yourdomain.com/mail.txt
+docker exec smail-opendkim cat /etc/opendkim/keys/yourdomain.com/mail.txt
 ```
 
 ## Step 7: Create First Admin
 
 ```bash
-# Connect to the database
-docker exec -it maas-mariadb mysql -u maas_user -p maas
+# Add your domain once (idempotent)
+docker compose exec mariadb mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" \
+  -e "INSERT IGNORE INTO domains (domain, is_verified) VALUES ('yourdomain.com', 1);"
 
-# Add your domain
-INSERT INTO domains (domain) VALUES ('yourdomain.com');
-
-# Create admin user (use the bcrypt hash from Python)
-# python3 -c "from passlib.context import CryptContext; print(CryptContext(schemes=['bcrypt']).hash('yourpassword'))"
-INSERT INTO users (email, password_hash, domain_id, display_name, is_admin)
-VALUES ('admin@yourdomain.com', '$2b$12$YOUR_HASH_HERE', 1, 'Admin', TRUE);
-```
-
-Alternatively, use the API:
-```bash
-# First add a domain (requires existing admin, so use DB for bootstrap)
-# Then register via API
+# Register the first account through API
 curl -X POST http://localhost:8000/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@yourdomain.com","password":"yourpassword","display_name":"Admin"}'
+
+# Promote it to admin
+docker compose exec mariadb mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" \
+  -e "UPDATE users SET is_admin=1 WHERE email='admin@yourdomain.com';"
 ```
 
 ## Step 8: Configure DNS
@@ -176,7 +185,7 @@ npx vercel --prod
 # TLS certificate auto-renewal
 crontab -e
 # Add:
-0 3 * * * certbot renew --quiet && docker compose -f /opt/maas/backend/docker-compose.yml restart nginx postfix dovecot
+0 3 * * * certbot renew --quiet && docker compose -f /opt/smail/backend/docker-compose.yml restart nginx postfix dovecot
 ```
 
 ## Post-Deployment Checklist

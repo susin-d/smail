@@ -2,13 +2,31 @@
 
 ## Overview
 
-Each domain you add to MaaS requires DNS records for email delivery, authentication, and spam prevention. This guide walks through configuring all required records.
+Each domain you add to smail requires DNS records for email delivery, authentication, and spam prevention. This guide walks through configuring all required records.
 
 ## Prerequisites
 
 - A domain registered with a DNS provider (Cloudflare, Route53, Namecheap, etc.)
 - Your VPS public IP address
 - DKIM public key (generated automatically when OpenDKIM starts)
+
+## Quick Generate Script
+
+You can generate ready-to-copy DNS values with:
+
+```bash
+cd backend
+chmod +x scripts/dns-setup.sh
+./scripts/dns-setup.sh --domain example.com --ip YOUR_VPS_IP
+```
+
+The script reads defaults from `backend/.env` and tries to fetch the DKIM key from `smail-opendkim` if the container is running.
+
+For complete options:
+
+```bash
+./scripts/dns-setup.sh --help
+```
 
 ## Required DNS Records
 
@@ -46,7 +64,7 @@ To retrieve your DKIM key:
 
 ```bash
 # SSH into your VPS
-docker exec maas-opendkim cat /etc/opendkim/keys/example.com/mail.txt
+docker exec smail-opendkim cat /etc/opendkim/keys/example.com/mail.txt
 ```
 
 | Type | Name                            | Value                              | TTL  |
@@ -96,7 +114,7 @@ DNS changes can take up to 48 hours to propagate globally, but typically complet
 
 ## Adding More Domains
 
-Repeat the process above for each new domain. The MaaS API will return the required records when you add a domain via the dashboard.
+Repeat the process above for each new domain. The smail API will return the required records when you add a domain via the dashboard.
 
 ## Cloudflare Users
 
@@ -104,3 +122,4 @@ If using Cloudflare:
 - Set the `mail.example.com` A record to **DNS only** (gray cloud), NOT proxied
 - MX records cannot be proxied
 - Email traffic must connect directly to your VPS IP
+- Do not proxy SMTP/IMAP ports through Cloudflare (25/587/993)

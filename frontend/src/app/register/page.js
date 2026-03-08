@@ -32,7 +32,7 @@ export default function RegisterPage() {
             <div className="auth-card">
                 <div className="auth-logo">
                     <div className="logo-icon">✉</div>
-                    <h1>MaaS</h1>
+                    <h1>smail</h1>
                 </div>
                 <h2 className="auth-title">Create your account</h2>
 

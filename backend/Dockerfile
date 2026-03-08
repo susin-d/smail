@@ -7,13 +7,13 @@ COPY api-go/go.mod api-go/go.sum ./
 RUN go mod download
 
 COPY api-go/ ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o maas-api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -o smail-api ./cmd/api
 
 FROM alpine:3.19
 
 WORKDIR /root/
-COPY --from=builder /app/maas-api ./
+COPY --from=builder /app/smail-api ./
 
 EXPOSE 8000
 
-CMD ["./maas-api"]
+CMD ["./smail-api"]

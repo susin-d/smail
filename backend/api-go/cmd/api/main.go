@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	log.Println("MaaS API starting up...")
+	log.Println("smail API starting up...")
 
 	// 1. Load config
 	cfg := config.GetSettings()
@@ -71,7 +71,7 @@ func main() {
 
 	// Health check
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"service": "MaaS API", "version": "1.0.0", "status": "operational"})
+		c.JSON(http.StatusOK, gin.H{"service": "smail API", "version": "1.0.0", "status": "operational"})
 	})
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
