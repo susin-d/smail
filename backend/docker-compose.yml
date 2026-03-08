@@ -1,0 +1,205 @@
+services:
+  # ─── MariaDB ───
+  mariadb:
+    image: mariadb:10.11
+    container_name: maas-mariadb
+    restart: unless-stopped
+    mem_limit: 80m
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./mariadb/my.cnf:/etc/mysql/conf.d/custom.cnf
+    command: >
+      --innodb-buffer-pool-size=32M
+      --key-buffer-size=8M
+      --max-connections=20
+      --innodb-log-file-size=16M
+      --innodb-flush-method=O_DIRECT
+      --performance-schema=OFF
+      --table-open-cache=64
+      --thread-cache-size=4
+      --tmp-table-size=8M
+      --max-heap-table-size=8M
+    networks:
+      - maas-net
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─── Redis ───
+  redis:
+    image: redis:7-alpine
+    container_name: maas-redis
+    restart: unless-stopped
+    mem_limit: 50m
+    command: >
+      redis-server
+      --maxmemory 40mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    volumes:
+      - redis_data:/data
+    networks:
+      - maas-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ─── Postfix (SMTP) ───
+  postfix:
+    build:
+      context: ./postfix
+      dockerfile: Dockerfile
+    container_name: maas-postfix
+    restart: unless-stopped
+    mem_limit: 100m
+    hostname: ${HOSTNAME:-mail.example.com}
+    environment:
+      - PRIMARY_DOMAIN=${PRIMARY_DOMAIN:-example.com}
+      - HOSTNAME=${HOSTNAME:-mail.example.com}
+      - MAX_MESSAGE_SIZE=${MAX_MESSAGE_SIZE:-10485760}
+    ports:
+      - "25:25"
+      - "587:587"
+    volumes:
+      - maildata:/maildata
+      - certs:/etc/letsencrypt:ro
+      - opendkim_keys:/etc/opendkim/keys:ro
+    depends_on:
+      - dovecot
+      - opendkim
+      - rspamd
+    networks:
+      - maas-net
+
+  # ─── Dovecot (IMAP) ───
+  dovecot:
+    build:
+      context: ./dovecot
+      dockerfile: Dockerfile
+    container_name: maas-dovecot
+    restart: unless-stopped
+    mem_limit: 150m
+    environment:
+      - MYSQL_HOST=mariadb
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "993:993"
+    volumes:
+      - maildata:/maildata
+      - certs:/etc/letsencrypt:ro
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - maas-net
+
+  # ─── OpenDKIM ───
+  opendkim:
+    build:
+      context: ./opendkim
+      dockerfile: Dockerfile
+    container_name: maas-opendkim
+    restart: unless-stopped
+    mem_limit: 50m
+    environment:
+      - PRIMARY_DOMAIN=${PRIMARY_DOMAIN:-example.com}
+      - DKIM_SELECTOR=${DKIM_SELECTOR:-mail}
+    volumes:
+      - opendkim_keys:/etc/opendkim/keys
+    networks:
+      - maas-net
+
+  # ─── Rspamd (Anti-Spam) ───
+  rspamd:
+    build:
+      context: ./rspamd
+      dockerfile: Dockerfile
+    container_name: maas-rspamd
+    restart: unless-stopped
+    mem_limit: 150m
+    volumes:
+      - ./rspamd/local.d:/etc/rspamd/local.d:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - maas-net
+
+  # ─── API Backend (Go) ───
+  api-go:
+    build:
+      context: ./api-go
+      dockerfile: Dockerfile
+    container_name: maas-api
+    restart: unless-stopped
+    mem_limit: 150m
+    environment:
+      - MYSQL_HOST=mariadb
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRE_MINUTES=${JWT_EXPIRE_MINUTES:-1440}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - SMTP_HOST=postfix
+      - SMTP_PORT=587
+      - IMAP_HOST=dovecot
+      - IMAP_PORT=993
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - PRIMARY_DOMAIN=${PRIMARY_DOMAIN:-example.com}
+    ports:
+      - "8000:8000"
+    volumes:
+      - maildata:/maildata
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - maas-net
+
+  # ─── Nginx Reverse Proxy ───
+  nginx:
+    build:
+      context: ..
+      dockerfile: backend/nginx/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=/api
+    container_name: maas-nginx
+    restart: unless-stopped
+    mem_limit: 30m
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - certs:/etc/letsencrypt:ro
+    depends_on:
+      - api-go
+    networks:
+      - maas-net
+
+volumes:
+  mariadb_data:
+  redis_data:
+  maildata:
+  certs:
+  opendkim_keys:
+
+networks:
+  maas-net:
+    driver: bridge
