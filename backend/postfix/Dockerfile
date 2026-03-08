@@ -3,6 +3,7 @@ FROM alpine:3.19
 RUN apk add --no-cache \
     postfix \
     postfix-pcre \
+    openssl \
     ca-certificates \
     bash
 

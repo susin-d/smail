@@ -73,7 +73,7 @@ services:
       - "587:587"
     volumes:
       - maildata:/maildata
-      - certs:/etc/letsencrypt:ro
+      - certs:/etc/letsencrypt
       - opendkim_keys:/etc/opendkim/keys:ro
     depends_on:
       - dovecot
@@ -95,11 +95,13 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - PRIMARY_DOMAIN=${PRIMARY_DOMAIN:-example.com}
+      - HOSTNAME=${HOSTNAME:-mail.example.com}
     ports:
       - "993:993"
     volumes:
       - maildata:/maildata
-      - certs:/etc/letsencrypt:ro
+      - certs:/etc/letsencrypt
     depends_on:
       mariadb:
         condition: service_healthy
@@ -183,11 +185,13 @@ services:
     container_name: smail-nginx
     restart: unless-stopped
     mem_limit: 30m
+    environment:
+      - HOSTNAME=${HOSTNAME:-mail.example.com}
     ports:
       - "443:443"
       - "80:80"
     volumes:
-      - certs:/etc/letsencrypt:ro
+      - certs:/etc/letsencrypt
     depends_on:
       - api-go
     networks:

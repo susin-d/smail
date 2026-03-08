@@ -7,6 +7,7 @@ RUN apk add --no-cache \
     dovecot-mysql \
     dovecot-pigeonhole-plugin \
     bash \
+    openssl \
     ca-certificates
 
 RUN rm -rf /var/cache/apk/*

@@ -2,22 +2,31 @@
 set -e
 
 MYSQL_PASSWORD="${MYSQL_PASSWORD:-changeme}"
+FQDN="${HOSTNAME:-mail.example.com}"
 
 echo "Configuring Dovecot..."
 
 # Replace password placeholder in SQL config
 sed -i "s/MYSQL_PASSWORD_PLACEHOLDER/$MYSQL_PASSWORD/g" /etc/dovecot/dovecot-sql.conf
 
-# Update TLS paths if certs exist
-CERT_DIR="/etc/letsencrypt/live/${HOSTNAME:-mail.example.com}"
-if [ -f "$CERT_DIR/fullchain.pem" ]; then
-    sed -i "s|ssl_cert = .*|ssl_cert = <$CERT_DIR/fullchain.pem|" /etc/dovecot/dovecot.conf
-    sed -i "s|ssl_key = .*|ssl_key = <$CERT_DIR/privkey.pem|" /etc/dovecot/dovecot.conf
-    echo "TLS certificates configured."
-else
-    echo "WARNING: No TLS certs found. Disabling SSL requirement."
-    sed -i "s|ssl = required|ssl = no|" /etc/dovecot/dovecot.conf
+# Update TLS paths and generate fallback certs if needed
+CERT_DIR="/etc/letsencrypt/live/${FQDN}"
+CERT_FILE="$CERT_DIR/fullchain.pem"
+KEY_FILE="$CERT_DIR/privkey.pem"
+mkdir -p "$CERT_DIR"
+
+if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+    echo "WARNING: No TLS certs found for ${FQDN}. Generating temporary self-signed certificate."
+    openssl req -x509 -nodes -newkey rsa:2048 -days 30 \
+      -subj "/CN=${FQDN}" \
+      -keyout "$KEY_FILE" \
+      -out "$CERT_FILE" >/dev/null 2>&1
 fi
+
+sed -i "s|ssl_cert = .*|ssl_cert = <$CERT_FILE|" /etc/dovecot/dovecot.conf
+sed -i "s|ssl_key = .*|ssl_key = <$KEY_FILE|" /etc/dovecot/dovecot.conf
+sed -i "s|ssl = no|ssl = required|" /etc/dovecot/dovecot.conf
+echo "TLS certificates configured at $CERT_DIR."
 
 # Create vmail user/group
 addgroup -g 5000 vmail 2>/dev/null || true

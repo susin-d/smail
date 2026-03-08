@@ -13,14 +13,17 @@ RUN npm run build
 # Stage 2: Nginx Server
 FROM nginx:1.25-alpine
 
+RUN apk add --no-cache openssl bash
 RUN rm -rf /var/cache/apk/*
 
 # Copy configuration
 COPY backend/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY backend/nginx/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Copy static frontend export
 COPY --from=builder /app/out /usr/share/nginx/html
 
 EXPOSE 80 443
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/entrypoint.sh"]
