@@ -102,6 +102,7 @@ For full request/response examples, see `docs/api-testing.md`.
 Detailed instructions:
 
 - `docs/deployment.md`
+- `docs/vps-hosting.md`
 - `docs/dns-setup.md`
 - `docs/architecture.md`
 - `docs/memory-optimization.md`

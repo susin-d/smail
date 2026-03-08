@@ -178,10 +178,8 @@ services:
   # ─── Nginx Reverse Proxy ───
   nginx:
     build:
-      context: ..
-      dockerfile: backend/nginx/Dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=/api
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: smail-nginx
     restart: unless-stopped
     mem_limit: 30m

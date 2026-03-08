@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>smail Backend API Tester</title>
+  <style>
+    :root {
+      --bg: #0d1321;
+      --panel: #1d2d44;
+      --panel-2: #243b55;
+      --text: #f0ebd8;
+      --muted: #bfd7ea;
+      --accent: #ff8c42;
+      --ok: #6ee7b7;
+      --danger: #f87171;
+      --border: #3e5c76;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(160deg, #0d1321 0%, #1d2d44 50%, #3e5c76 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 0 16px 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .hint {
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(29, 45, 68, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 8px 10px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #1a1a1a;
+      font-weight: 700;
+      margin-top: 10px;
+      border: none;
+    }
+
+    button:hover {
+      filter: brightness(1.05);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .status {
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--muted);
+      white-space: pre-wrap;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      min-height: 64px;
+    }
+
+    .ok {
+      color: var(--ok);
+    }
+
+    .err {
+      color: var(--danger);
+    }
+
+    @media (max-width: 640px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>smail Backend API Tester</h1>
+    <div class="hint">Use this page to test all backend endpoints. Default Base URL is <code>http://localhost:8000</code>.</div>
+
+    <div class="card" style="margin-bottom: 12px;">
+      <h3>Global Settings</h3>
+      <div class="row">
+        <div>
+          <label for="baseUrl">Base URL</label>
+          <input id="baseUrl" value="http://localhost:8000" />
+        </div>
+        <div>
+          <label for="token">Bearer Token (auto-filled after login/register)</label>
+          <input id="token" placeholder="eyJhbGciOi..." />
+        </div>
+      </div>
+      <button id="btnClear">Clear Response</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Health</h3>
+        <button data-method="GET" data-path="/">GET /</button>
+        <button data-method="GET" data-path="/health">GET /health</button>
+      </div>
+
+      <div class="card">
+        <h3>Auth</h3>
+        <label for="authEmail">Email</label>
+        <input id="authEmail" value="admin@susindran.in" />
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" value="StrongPass123!" />
+        <label for="authDisplayName">Display Name (register)</label>
+        <input id="authDisplayName" value="Admin" />
+        <button id="btnRegister">POST /auth/register</button>
+        <button id="btnLogin">POST /auth/login</button>
+      </div>
+
+      <div class="card">
+        <h3>Domains</h3>
+        <label for="domainId">Domain ID</label>
+        <input id="domainId" value="1" />
+        <label for="domainName">Domain Name (create)</label>
+        <input id="domainName" value="example.com" />
+        <button data-method="GET" data-path="/domains" data-auth="1">GET /domains</button>
+        <button id="btnCreateDomain">POST /domains</button>
+        <button id="btnDomainDns">GET /domains/{id}/dns</button>
+        <button id="btnDeleteDomain">DELETE /domains/{id}</button>
+      </div>
+
+      <div class="card">
+        <h3>Users</h3>
+        <label for="userId">User ID (delete)</label>
+        <input id="userId" value="2" />
+        <label for="createUserJson">POST /users JSON</label>
+        <textarea id="createUserJson">{
+  "email": "user@susindran.in",
+  "password": "UserPass123!",
+  "display_name": "Regular User",
+  "domain_id": 1,
+  "is_admin": false
+}</textarea>
+        <label for="patchMeJson">PATCH /users/me JSON</label>
+        <textarea id="patchMeJson">{
+  "display_name": "Updated Name"
+}</textarea>
+        <button data-method="GET" data-path="/users" data-auth="1">GET /users</button>
+        <button id="btnCreateUser">POST /users</button>
+        <button data-method="GET" data-path="/users/me" data-auth="1">GET /users/me</button>
+        <button id="btnPatchMe">PATCH /users/me</button>
+        <button id="btnDeleteUser">DELETE /users/{id}</button>
+      </div>
+
+      <div class="card">
+        <h3>Mail</h3>
+        <label for="mailId">Mail ID</label>
+        <input id="mailId" value="1" />
+        <label for="folder">Folder</label>
+        <input id="folder" value="INBOX" />
+        <label for="page">Page</label>
+        <input id="page" value="1" />
+        <label for="perPage">Per Page</label>
+        <input id="perPage" value="20" />
+        <label for="sendJson">POST /mail/send JSON</label>
+        <textarea id="sendJson">{
+  "to": "recipient@gmail.com",
+  "subject": "Hello from smail tester",
+  "body": "This is a test email",
+  "html_body": "<p>This is a <strong>test</strong> email</p>"
+}</textarea>
+        <label for="actionJson">POST /mail/{id}/action JSON</label>
+        <textarea id="actionJson">{
+  "action": "star"
+}</textarea>
+        <button data-method="GET" data-path="/mail/folders" data-auth="1">GET /mail/folders</button>
+        <button id="btnInbox">GET /mail/inbox</button>
+        <button id="btnGetMail">GET /mail/{id}</button>
+        <button id="btnSend">POST /mail/send</button>
+        <button id="btnAction">POST /mail/{id}/action</button>
+      </div>
+    </div>
+
+    <div id="status" class="status">Ready. Click any endpoint button.</div>
+  </div>
+
+  <script>
+    const baseUrlEl = document.getElementById("baseUrl");
+    const tokenEl = document.getElementById("token");
+    const statusEl = document.getElementById("status");
+
+    function showStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.classList.toggle("err", isError);
+      statusEl.classList.toggle("ok", !isError);
+    }
+
+    function getBaseUrl() {
+      return baseUrlEl.value.trim().replace(/\/$/, "");
+    }
+
+    async function callApi(path, method = "GET", body = null, useAuth = false) {
+      const url = `${getBaseUrl()}${path}`;
+      const headers = { "Content-Type": "application/json" };
+      if (useAuth && tokenEl.value.trim()) {
+        headers.Authorization = `Bearer ${tokenEl.value.trim()}`;
+      }
+
+      const opts = { method, headers };
+      if (body) {
+        opts.body = JSON.stringify(body);
+      }
+
+      try {
+        const res = await fetch(url, opts);
+        const raw = await res.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(raw);
+        } catch {
+          parsed = raw;
+        }
+
+        const out = [
+          `${method} ${path}`,
+          `HTTP ${res.status} ${res.statusText}`,
+          "",
+          typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2)
+        ].join("\n");
+
+        showStatus(out, !res.ok);
+        return parsed;
+      } catch (err) {
+        showStatus(`${method} ${path}\nNetwork Error\n\n${err.message}`, true);
+        return null;
+      }
+    }
+
+    document.getElementById("btnClear").addEventListener("click", () => {
+      showStatus("Cleared. Ready.");
+    });
+
+    document.querySelectorAll("button[data-path]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const method = btn.getAttribute("data-method") || "GET";
+        const path = btn.getAttribute("data-path");
+        const useAuth = btn.getAttribute("data-auth") === "1";
+        await callApi(path, method, null, useAuth);
+      });
+    });
+
+    document.getElementById("btnRegister").addEventListener("click", async () => {
+      const payload = {
+        email: document.getElementById("authEmail").value.trim(),
+        password: document.getElementById("authPassword").value,
+        display_name: document.getElementById("authDisplayName").value.trim()
+      };
+      const res = await callApi("/auth/register", "POST", payload, false);
+      if (res && res.access_token) tokenEl.value = res.access_token;
+    });
+
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const payload = {
+        email: document.getElementById("authEmail").value.trim(),
+        password: document.getElementById("authPassword").value
+      };
+      const res = await callApi("/auth/login", "POST", payload, false);
+      if (res && res.access_token) tokenEl.value = res.access_token;
+    });
+
+    document.getElementById("btnCreateDomain").addEventListener("click", async () => {
+      await callApi("/domains", "POST", { domain: document.getElementById("domainName").value.trim() }, true);
+    });
+
+    document.getElementById("btnDomainDns").addEventListener("click", async () => {
+      const id = document.getElementById("domainId").value.trim();
+      await callApi(`/domains/${id}/dns`, "GET", null, true);
+    });
+
+    document.getElementById("btnDeleteDomain").addEventListener("click", async () => {
+      const id = document.getElementById("domainId").value.trim();
+      await callApi(`/domains/${id}`, "DELETE", null, true);
+    });
+
+    document.getElementById("btnCreateUser").addEventListener("click", async () => {
+      try {
+        const payload = JSON.parse(document.getElementById("createUserJson").value);
+        await callApi("/users", "POST", payload, true);
+      } catch {
+        showStatus("POST /users\nInvalid JSON in create user payload", true);
+      }
+    });
+
+    document.getElementById("btnPatchMe").addEventListener("click", async () => {
+      try {
+        const payload = JSON.parse(document.getElementById("patchMeJson").value);
+        await callApi("/users/me", "PATCH", payload, true);
+      } catch {
+        showStatus("PATCH /users/me\nInvalid JSON in patch payload", true);
+      }
+    });
+
+    document.getElementById("btnDeleteUser").addEventListener("click", async () => {
+      const id = document.getElementById("userId").value.trim();
+      await callApi(`/users/${id}`, "DELETE", null, true);
+    });
+
+    document.getElementById("btnInbox").addEventListener("click", async () => {
+      const folder = encodeURIComponent(document.getElementById("folder").value.trim());
+      const page = encodeURIComponent(document.getElementById("page").value.trim());
+      const perPage = encodeURIComponent(document.getElementById("perPage").value.trim());
+      await callApi(`/mail/inbox?folder=${folder}&page=${page}&per_page=${perPage}`, "GET", null, true);
+    });
+
+    document.getElementById("btnGetMail").addEventListener("click", async () => {
+      const id = document.getElementById("mailId").value.trim();
+      await callApi(`/mail/${id}`, "GET", null, true);
+    });
+
+    document.getElementById("btnSend").addEventListener("click", async () => {
+      try {
+        const payload = JSON.parse(document.getElementById("sendJson").value);
+        await callApi("/mail/send", "POST", payload, true);
+      } catch {
+        showStatus("POST /mail/send\nInvalid JSON in send payload", true);
+      }
+    });
+
+    document.getElementById("btnAction").addEventListener("click", async () => {
+      const id = document.getElementById("mailId").value.trim();
+      try {
+        const payload = JSON.parse(document.getElementById("actionJson").value);
+        await callApi(`/mail/${id}/action`, "POST", payload, true);
+      } catch {
+        showStatus("POST /mail/{id}/action\nInvalid JSON in action payload", true);
+      }
+    });
+  </script>
+</body>
+</html>
